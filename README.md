@@ -3,6 +3,8 @@ Simple Python Sudoku solver for Windows OS using backtracking algorithm and the 
 
 ![Screenshot](./img/screenshot.png)
 
+Note: The green numbers in the screenshot above are the input values loaded from the [puzzle file](./puzzles/easy.txt).
+
 ## Requirements
 - Windows OS (tested with Windows 10)
 - Windows Terminal supporting ANSI Escape Seuqences (cursor positioning and colors)

@@ -10,7 +10,9 @@ Note: The green numbers in the screenshot above are the input values loaded from
 - Windows Terminal supporting ANSI Escape Seuqences (cursor positioning and colors)
 
 ## Basic usage
-Prepare a textfile with a Sudoku puzzle you can´t solve or you are too lazy to do manually. The Sudoko puzzle file consists of numbers [0-9] placed in a 9x9 grid, where the numer 0 indicates a free slot. Numers in columns are separated by single space char, rows are separated with a line break. Place # at the beginning of a line for adding comments ignored by the solver. Invoke the Sudoku solver with argument --interactive to see the backtracking algorithm in action.
+Prepare a textfile with a Sudoku puzzle you can´t solve or you are too lazy to do manually. The Sudoko puzzle file consists of numbers [0-9] placed in a 9x9 grid, where the numer 0 indicates a free slot. Numers in columns are separated by single space char, rows are separated with a line break. Place # at the beginning of a line for adding comments ignored by the solver. 
+
+**Hint:** Invoke the script with the flag *--interactive* to see the backtracking algorithm in action.
 
 ```bash
 usage: sudoku.py [-h] [--space SPACE] [--interactive] sudokufile

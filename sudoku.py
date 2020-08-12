@@ -1,6 +1,7 @@
 """
 #######################################################################################
 # Script to solve Sudoko puzzles using a simple back tracking algorithm.
+# Uses the module terminal to move the cursor and set colors in the Windows terminal.
 #
 # @module:    sudoku
 # @platform:  Windows OS (tested with Windows 10 only)
@@ -9,72 +10,16 @@
 #######################################################################################
 """
 import argparse
-import os
 import sys
 
 import pandas as pd
-
-
-class Terminal:
-    """Wrapper to manipulate Windows OS terminal cursor position and color using ANSI Escape sequences."""
-
-    # You may need to adjust the terminals start position in case you are using a terminal other than Cmder.
-    TERMINAL_TOP_LEFT_POS = (1, 1)
-
-    # ANSI sequences to manipulate cursor position and foreground colors.
-    SAVE_CURSOR_POS, RESTORE_CURSOR_POS = "\033[s", "\033[u"
-    COLORS = {
-        "default": "\033[0m",
-        "black": "\033[30m",
-        "red": "\033[31m",
-        "green": "\033[32m",
-        "yellow": "\033[33m",
-        "blue": "\033[34m",
-        "magenta": "\033[35m",
-        "cyan": "\033[36m",
-        "white": "\033[37m",
-    }
-
-    def __init__(self):
-        """Initialize the terminal."""
-        self.clear()
-
-    def move_up_down(self, pos):
-        """Move cursor POS lines lines up or down."""
-        if pos < 0:
-            print(f"\033[{pos}A", end="")
-        else:
-            print(f"\033[{pos * -1}B", end="")
-
-    def save_cursor_pos(self):
-        """Save actual cursor position."""
-        print(self.SAVE_CURSOR_POS, end="")
-
-    def restore_cursor_pos(self):
-        """Restore previously stored cursor position."""
-        print(self.RESTORE_CURSOR_POS, end="")
-
-    def clear(self):
-        """Clear entire terminal output."""
-        if os.name == "nt":
-            os.system("cls")  # Windows OS
-        else:
-            os.system("clear")  # Linux/Unix like OS
-
-    def tprint(self, row, col, msg="", color=None):
-        """Outputs message in specified text color at defined terminal row/col position."""
-        text_color = self.COLORS.get(color, self.COLORS["default"])
-        x0, y0 = self.TERMINAL_TOP_LEFT_POS
-
-        # Output message with specified color at given position.
-        print(f"{text_color}\033[{x0 + row};{y0 + col}f{msg}{self.COLORS['default']}", end="")
+from terminal import Terminal
 
 
 class Sudoku:
-    def __init__(self, args, terminal):
-        # Extract command line arguments and store terminal object.
+    def __init__(self, args):
+        # Extract required and optional command line arguments.
         self.puzzlefile, self.space, self.interactive = args.puzzlefile, args.space, args.interactive
-        self.terminal = terminal
 
         # Read Sudoku puzzle file and draw initial board to terminal.
         self.read_puzzle_file(self.puzzlefile)
@@ -100,7 +45,7 @@ class Sudoku:
             print(tpl_values.format(self.space))
         print(tpl_border)
 
-        # Fill in puzzle file numbers at respecitve board coordinates.
+        # Fill input numbers from puzzle file at respecitve board coordinates.
         self.set_board_numbers(inputs_only=True)
 
         # Prompt user to start solver or to quit.
@@ -109,14 +54,14 @@ class Sudoku:
             sys.exit()
 
         # Store actual terminal cursor position in memory.
-        self.terminal.save_cursor_pos()
+        terminal.exec(code="cursor_save")
 
-    def set_board_number(self, row_idx, col_idx, number, color=None):
+    def set_board_number(self, row_idx, col_idx, number, fg_color=None, bg_color=None):
         """Transfer 9x9 row/col indices into terminal coordinates matching initial board."""
-        row_map = {0: 2, 1: 3, 2: 4, 3: 6, 4: 7, 5: 8, 6: 10, 7: 11, 8: 12}
-        col_map = {0: 2, 1: 4, 2: 6, 3: 10, 4: 12, 5: 14, 6: 18, 7: 20, 8: 22}
+        row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
+        col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}
 
-        self.terminal.tprint(row_map.get(row_idx), col_map.get(col_idx), number, color)
+        terminal.write(number, row_map.get(row_idx), col_map.get(col_idx), fg_color=fg_color, bg_color=bg_color)
 
     def set_board_numbers(self, board=None, inputs_only=True):
         """Fill board with numbers from specified board. Input numbers [1-9] are shown green."""
@@ -124,9 +69,9 @@ class Sudoku:
         for row in range(9):
             for col in range(9):
                 if self.board_input[row, col] > 0:
-                    self.set_board_number(row, col, self.board_input[row, col], "green")
+                    self.set_board_number(row, col, self.board_input[row, col], fg_color="green")
                 else:
-                    self.set_board_number(row, col, self.space if inputs_only else board[row, col], "default")
+                    self.set_board_number(row, col, self.space if inputs_only else board[row, col])
 
     def solve_puzzle(self):
         """Solve Sudoku puzzle using backtracking algortithm."""
@@ -160,7 +105,7 @@ class Sudoku:
 
         # Ask if we should check for another possible solution.
         # We restore actual cursor so input line does not move down with every new solution.
-        self.terminal.restore_cursor_pos()
+        terminal.exec(code="cursor_load")
         print(f"Number of Iterations: {self.iteration_steps}")
         answer = input("Check for another solution [Y/N]? ").lower()
         if answer == "n":
@@ -200,25 +145,25 @@ if __name__ == "__main__":
     args = parse_args()
 
     # Create terminal object to use ANSI escape sequences for manipulation curosr position and text color.
-    terminal = Terminal()
-    terminal.clear()
+    terminal = Terminal(terminal_fg_color="white", terminal_bg_color="black")
+    terminal.exec("clear")
 
     try:
         # Initiate sudoko object.
-        sudoku = Sudoku(args, terminal)
+        sudoku = Sudoku(args)
 
         # Try to find solutions for the given puzzle.
         sudoku.solve_puzzle()
-        sudoku.terminal.restore_cursor_pos()
+        terminal.exec("cursor_load")
 
         # Print status message
         if sudoku.solutions_found > 0 and not sudoku.board.all():
             print(
                 f"\n\n\nNo further solution found. There exists {sudoku.solutions_found} solution(s) for the input puzzle."
             )
-            sudoku.terminal.save_cursor_pos()
+            terminal.exec(code="cursor_save")
             sudoku.set_board_numbers(board=sudoku.board_last_solution, inputs_only=False)
-            sudoku.terminal.restore_cursor_pos()
+            terminal.exec(code="cursor_load")
         else:
             print(f"\n\n\nSolver finished. Found {sudoku.solutions_found} solution(s) for the input puzzle.")
 

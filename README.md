@@ -1,6 +1,10 @@
 # 👀 Sudoku Solver - Python 3.8+
 
-Simple Sudoku solver using backtracking algorithm and the great [Pandas package](https://pandas.pydata.org/docs/).
+Simple Python Sudoku solver for Windows OS using backtracking algorithm and the great [Pandas package](https://pandas.pydata.org/docs/).
+
+## Requirements
+- Windows OS (tested with Windows 10)
+- Windows Terminal supporting ANSI Escape Seuqences (cursor positioning and colors)
 
 ## Basic usage
 Prepare a textfile with a Sudoku puzzle you can´t solve or you are too lazy to do manually. The Sudoko puzzle file consists of numbers [0-9] placed in a 9x9 grid, where the numer 0 indicates a free slot. Numers in columns are separated by single space char, rows are separated with a line break. Place # at the beginning of a line for adding comments ignored by the solver. Invoke the Sudoku solver with argument --interactive to see the backtracking algorithm in action.

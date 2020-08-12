@@ -1,6 +1,7 @@
 # 👀 Sudoku Solver - Python 3.8+
-
 Simple Python Sudoku solver for Windows OS using backtracking algorithm and the great [Pandas package](https://pandas.pydata.org/docs/).
+
+![Screenshot](./img/screenshot.png)
 
 ## Requirements
 - Windows OS (tested with Windows 10)

@@ -203,10 +203,10 @@ if __name__ == "__main__":
     terminal = Terminal()
     terminal.clear()
 
-    # Initiate sudoko object.
-    sudoku = Sudoku(args, terminal)
-
     try:
+        # Initiate sudoko object.
+        sudoku = Sudoku(args, terminal)
+
         # Try to find solutions for the given puzzle.
         sudoku.solve_puzzle()
         sudoku.terminal.restore_cursor_pos()

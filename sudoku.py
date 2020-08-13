@@ -28,9 +28,10 @@ class Sudoku:
     def read_puzzle_file(self, puzzlefile):
         # Read Sudoku puzzle file and store board as 9x9 Numpy matrix.
         self.board_input = pd.read_csv(puzzlefile, sep=" ", comment="#", dtype="byte", header=None).to_numpy()
+        assert self.board_input.shape == (9, 9)
+
         self.board, self.board_last_solution = self.board_input.copy(), None
         self.solutions_found, self.iteration_steps = 0, 0
-        assert self.board.shape == (9, 9)
 
     def print_board(self):
         """Print Sudoku input board as 9x9 matrix to terminal with input numbers highlighted green."""
@@ -45,15 +46,15 @@ class Sudoku:
             print(tpl_values.format(self.space))
         print(tpl_border)
 
-        # Fill input numbers from puzzle file at respecitve board coordinates.
+        # Fill input numbers from puzzle file into individual slots.
         self.set_board_numbers(inputs_only=True)
 
-        # Prompt user to start solver or to quit.
+        # Prompt user to start the solver or to quit.
         if input("\nPress [ENTER] to solve the puzzle or [Q] to quit: ").lower() == "q":
             sys.exit()
 
     def set_board_number(self, row_idx, col_idx, number, fg_color=None, bg_color=None, auto_reset=True):
-        """Transfer 9x9 row/col indices into terminal coordinates matching initial board."""
+        """Transfer 9x9 row/col indices into terminal coordinates matching the initial empty board."""
         row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
         col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}
 
@@ -74,9 +75,14 @@ class Sudoku:
         # Reset previous cursor position and terminal colors.
         terminal.exec(code="cursor_load")
         terminal.exec(code="default")
+        terminal.exec(code="cursor_hide")
 
     def solve_puzzle(self):
         """Solve Sudoku puzzle using backtracking algortithm."""
+        # Disable cursor to avoid flickering when in interactive mode.
+        if self.interactive:
+            terminal.exec(code="cursor_hide")
+
         for row in range(9):
             for col in range(9):
                 # Find first free slot in the board.
@@ -98,8 +104,10 @@ class Sudoku:
                                 self.set_board_number(row, col, self.space)
                     return
 
-        # Solver found a solution. Draw solved board if not in interactive mode.
-        if not self.interactive:
+        # Solver found a solution.
+        if self.interactive:
+            terminal.exec(code="cursor_show")
+        else:
             self.set_board_numbers(inputs_only=False)
 
         # Store actual solution in case next run won´t find a new solution.
@@ -116,7 +124,7 @@ class Sudoku:
             print(f"\nSolver stopped on user request. Found {self.solutions_found} solution(s).")
             sys.exit()
 
-        # Reset cursor to previous position (next solution will overwrite the last two lines.)
+        # Reset cursor to last position so next solution overwrites last two lines instead of adding two new lines.
         terminal.exec(code="cursor_load")
 
         # Reset number of iterations for the next solution.
@@ -151,24 +159,26 @@ if __name__ == "__main__":
     # Parse command line arguments and quit program if required arguments are not specified.
     args = parse_args()
 
-    # Create terminal object to use ANSI escape sequences for manipulation curosr position and text color.
+    # Create terminal object to use ANSI escape sequences to set cursor position and text colors.
     terminal = Terminal(terminal_fg_color="white", terminal_bg_color="black")
-    terminal.exec("clear")
+    terminal.initialize()
 
     try:
         # Initiate sudoko object and try to solve input puzzle specified via command line args.
         sudoku = Sudoku(args)
         sudoku.solve_puzzle()
 
-        # Print status message. We add two lines to keep infos like number of iterations needed.
+        # Print status message (added two lines to keep infos like iteration number of last solution).
         print("\n" * 2)
         if sudoku.solutions_found > 0 and not sudoku.board.all():
             print(f"No further solution found. There exists {sudoku.solutions_found} solution(s) for the input puzzle.")
-            terminal.exec(code="cursor_save")
             sudoku.set_board_numbers(board=sudoku.board_last_solution, inputs_only=False)
-            terminal.exec(code="cursor_load")
         else:
             print(f"Solver finished. Found {sudoku.solutions_found} solution(s) for the input puzzle.")
 
     except KeyboardInterrupt:
         pass
+
+    finally:
+        terminal.exec(code="cursor_show")
+        terminal.exec(code="default")

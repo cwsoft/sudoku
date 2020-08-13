@@ -20,6 +20,8 @@ class Terminal:
         "clear": "\033[2J",
         "default": "\033[0m",
         # Cursor positioning
+        "cursor_hide": "\033[?25l",
+        "cursor_show": "\033[?25h",
         "cursor_save": "\033[s",
         "cursor_load": "\033[u",
         "cursor_up": "\033[{pos}A",
@@ -37,10 +39,18 @@ class Terminal:
         "white": "\033[{pos}7m",
     }
 
-    def __init__(self, terminal_fg_color="white", terminal_bg_color="black"):
+    def __init__(self, terminal_fg_color="white", terminal_bg_color="black", auto_init=False):
         """Initiates the terminal class with a default terminal fore- and background color.
         Change this settings in case you changed the default Windows terminal colors."""
         self.terminal_fg_color, self.terminal_bg_color = terminal_fg_color, terminal_bg_color
+
+        if auto_init:
+            self.initialize()
+
+    def initialize(self):
+        """Initializes the terminal. Clear output and set cursor to defined start position."""
+        self.exec(code="clear")
+        self.set_pos(row=1, col=1)
 
     def exec(self, code, **kwargs):
         """Executes given ANSI code sequence and replaces any optional placeholder(s) with values defined as kwargs."""

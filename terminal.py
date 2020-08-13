@@ -53,12 +53,25 @@ class Terminal:
         self.exec(code=fg_color if fg_color in self.CODES else self.terminal_fg_color, pos="3")
         self.exec(code=bg_color if bg_color in self.CODES else self.terminal_bg_color, pos="4")
 
-    def write(self, text, row=None, col=None, fg_color=None, bg_color=None):
-        """Writes text to specified terminal position using defined colors."""
+    def set_pos(self, row, col):
+        """Set terminal cursor position to given row and col values."""
         if not row is None and not col is None:
             self.exec(code="cursor_set", row=row, col=col)
+
+    def write(self, text, row=None, col=None, fg_color=None, bg_color=None, auto_reset=True):
+        """Write text to specified terminal position using defined colors. Cursor position and 
+        terminal colors are reset to previous values/defaults after output by default."""
+        if auto_reset:
+            self.exec(code="cursor_save")
+
+        # Set cursor position and terminal colors.
+        self.set_pos(row, col)
         self.set_color(fg_color, bg_color)
 
         # Write text to console and reset colors afterwards.
         print(text, end="")
-        self.exec(code="default")
+
+        # Reset previous cursor position and terminal colors if needed.
+        if auto_reset:
+            self.exec(code="cursor_load")
+            self.exec(code="default")

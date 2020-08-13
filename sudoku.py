@@ -75,7 +75,6 @@ class Sudoku:
         # Reset previous cursor position and terminal colors.
         terminal.exec(code="cursor_load")
         terminal.exec(code="default")
-        terminal.exec(code="cursor_hide")
 
     def solve_puzzle(self):
         """Solve Sudoku puzzle using backtracking algortithm."""

@@ -1,12 +1,12 @@
 # 👀 Sudoku Solver - Python 3.8+
-Simple Python Sudoku solver for Windows OS using backtracking algorithm and the great [Pandas package](https://pandas.pydata.org/docs/).
+Python Sudoku solver using backtracking algorithm and the great [Pandas package](https://pandas.pydata.org/docs/).
 
 ![Screenshot](./img/screenshot.png)
 
 Note: Green numbers in the screenshot above represent input values from the [puzzle file](./puzzles/easy.txt).
 
 ## Requirements
-- Windows OS (tested with Windows 10)
+- Windows OS (tested for Windows 10)
 - Windows Terminal supporting ANSI Escape Sequences (for cursor positioning and colors)
 - Python packages: pandas and csutils.cterm
 

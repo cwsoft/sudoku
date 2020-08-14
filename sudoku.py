@@ -17,7 +17,7 @@ import pandas as pd
 
 from csutils.cterm import Colors, Cursor, Styles, Terminal
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 
 class Sudoku:
@@ -53,18 +53,12 @@ class Sudoku:
         # Fill input numbers from puzzle file into individual slots.
         self.set_board_numbers(inputs_only=True)
 
-        # Prompt user to start the solver or to quit.
-        if input("\nPress [ENTER] to solve the puzzle or [Q] to quit: ").lower() == "q":
-            sys.exit()
-
     def set_board_number(self, number, row, col, forecolor=None, auto_reset=True):
         """Transfer 9x9 row/col indices into terminal coordinates matching the initial empty board."""
         row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
         col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}
 
-        Terminal.write(
-            text=number, end="", row=row_map.get(row), col=col_map.get(col), forecolor=forecolor, auto_reset=auto_reset
-        )
+        Terminal.write(text=number, row=row_map.get(row), col=col_map.get(col), forecolor=forecolor, auto_reset=auto_reset)
 
     def set_board_numbers(self, board=None, inputs_only=True):
         """Fill board with numbers from specified board. Input numbers [1-9] are shown green."""
@@ -165,8 +159,12 @@ if __name__ == "__main__":
     Terminal.initialize(forecolor=Colors.RESET, backcolor=Colors.RESET)
 
     try:
-        # Initiate sudoko object and try to solve input puzzle specified via command line args.
+        # Initiate sudoko object and displays the puzzle specified via command line args.
         sudoku = Sudoku(args)
+
+        # Prompt user to start the solver or to quit.
+        if input("\nPress [ENTER] to solve the puzzle or [Q] to quit: ").lower() == "q":
+            sys.exit()
         sudoku.solve_puzzle()
 
         # Print status message (move cursor down three rows to keep iteration number of last solution).

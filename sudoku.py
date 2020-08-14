@@ -118,7 +118,7 @@ class Sudoku:
 
         # Prompt user if we should check for another possible solution.
         print(f"Number of Iterations: {self.iteration_steps}" + " " * 15)
-        if input("Check for another solution [Y/N]? ").lower() == "n":
+        if input("Check for another solution ([Y]/N)? ").lower() == "n":
             print(f"\nSolver stopped on user request. Found {self.solutions_found} solution(s).")
             sys.exit()
 

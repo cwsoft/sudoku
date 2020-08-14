@@ -14,9 +14,11 @@ import argparse
 import sys
 
 import pandas as pd
+
 from csutils.cterm import Colors, Cursor, Styles, Terminal
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
+
 
 class Sudoku:
     def __init__(self, args):
@@ -55,7 +57,7 @@ class Sudoku:
         if input("\nPress [ENTER] to solve the puzzle or [Q] to quit: ").lower() == "q":
             sys.exit()
 
-    def set_board_number(self, number, row, col, forecolor=Colors.RESET, auto_reset=Terminal.AutoReset.COLOR_AND_CURSOR_POS):
+    def set_board_number(self, number, row, col, forecolor=None, auto_reset=True):
         """Transfer 9x9 row/col indices into terminal coordinates matching the initial empty board."""
         row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
         col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}

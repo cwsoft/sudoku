@@ -5,6 +5,7 @@
 #
 # @module:    sudoku
 # @platform:  Windows OS (tested with Windows 10 only)
+# @requires:  csutils.cterm, pandas
 # @author:    cwsoft
 # @python:    3.8 or higher
 #######################################################################################
@@ -13,7 +14,7 @@ import argparse
 import sys
 
 import pandas as pd
-from cterm import Colors, Cursor, Styles, Terminal
+from csutils.cterm import Colors, Cursor, Styles, Terminal
 
 
 class Sudoku:

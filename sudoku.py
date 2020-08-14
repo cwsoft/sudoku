@@ -13,7 +13,7 @@ import argparse
 import sys
 
 import pandas as pd
-from winterm import Colors, Cursor, Styles, Terminal
+from cterm import Colors, Cursor, Styles, Terminal
 
 
 class Sudoku:
@@ -53,12 +53,12 @@ class Sudoku:
         if input("\nPress [ENTER] to solve the puzzle or [Q] to quit: ").lower() == "q":
             sys.exit()
 
-    def set_board_number(self, number, row, col, forecolor=Colors.RESET, auto_reset=2):
+    def set_board_number(self, number, row, col, forecolor=Colors.RESET, auto_reset=Terminal.AutoReset.COLOR_AND_CURSOR_POS):
         """Transfer 9x9 row/col indices into terminal coordinates matching the initial empty board."""
         row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
         col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}
 
-        terminal.write(
+        Terminal.write(
             text=number, end="", row=row_map.get(row), col=col_map.get(col), forecolor=forecolor, auto_reset=auto_reset
         )
 
@@ -70,13 +70,13 @@ class Sudoku:
         for row in range(9):
             for col in range(9):
                 if self.board_input[row, col] > 0:
-                    self.set_board_number(self.board_input[row, col], row, col, forecolor=Colors.GREEN, auto_reset=0)
+                    self.set_board_number(self.board_input[row, col], row, col, forecolor=Colors.GREEN)
                 else:
-                    self.set_board_number(self.space if inputs_only else board[row, col], row, col, auto_reset=0)
+                    self.set_board_number(self.space if inputs_only else board[row, col], row, col)
 
         # Reset previous cursor position and terminal colors.
         Cursor.restore_pos()
-        terminal.set_style(Styles.RESET)
+        Terminal.set_style(Styles.RESET)
 
     def solve_puzzle(self):
         """Solve Sudoku puzzle using backtracking algortithm."""
@@ -157,8 +157,8 @@ if __name__ == "__main__":
     # Parse command line arguments and quit program if required arguments are not specified.
     args = parse_args()
 
-    # Create terminal object to use ANSI escape sequences to set cursor position and text colors.
-    terminal = Terminal(auto_init=True)
+    # Initialize terminal.
+    Terminal.initialize(forecolor=Colors.RESET, backcolor=Colors.RESET)
 
     try:
         # Initiate sudoko object and try to solve input puzzle specified via command line args.
@@ -178,4 +178,4 @@ if __name__ == "__main__":
 
     finally:
         Cursor.enable()
-        terminal.set_style(Styles.RESET)
+        Terminal.set_style(Styles.RESET)

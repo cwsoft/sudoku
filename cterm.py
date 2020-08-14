@@ -1,13 +1,13 @@
 """
 #######################################################################################
-# ANSI sequence wrapper for windows terminals (WinTerm).
-# Module to ease basic color and cursor manipulation for Windows terminals.
+# Module for basic terminal color and cursor manipulations via a small and simple API.
+# Under the hood ANSI escape sequences are printed to the terminals stdout.
 #
-# For further infos see:
-#  - https://de.wikipedia.org/wiki/ANSI-Escapesequenz
-#  - https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+# Some details about ANSI escape sequences can be found here:
+# - https://de.wikipedia.org/wiki/ANSI-Escapesequenz
+# - https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
 #
-# @module:    winterm
+# @module:    cterm
 # @platform:  Windows 10
 # @author:    cwsoft
 # @python:    3.8 or higher
@@ -25,7 +25,7 @@ class Ansi(Enum):
 
 
 class Colors(Enum):
-    """Basic terminal foreground color codes."""
+    """Basic terminal foreground color codes. For background colors simply increment by 10."""
 
     BLACK = 30
     RED = 31
@@ -56,7 +56,7 @@ class Styles(Enum):
 
 
 class Cursor:
-    """Basic cursor operations supported by most terminals."""
+    """Static class allowing basic cursor operations supported by most terminals."""
 
     @staticmethod
     def disable():
@@ -105,51 +105,57 @@ class Cursor:
 
 
 class Terminal:
-    """Wrapper to manipulate Windows terminal using ANSI Escape sequences."""
+    """Static class to modify terminal colors and cursor position and output formated text."""
 
-    def __init__(self, forecolor=Colors.RESET, backcolor=Colors.RESET, auto_init=True):
-        # Store terminal default forecolor and backcolor.
-        assert isinstance(forecolor, Colors), "Param forecolor must be of Enum Colors!"
-        assert isinstance(backcolor, Colors), "Param backcolor must be of Enum Colors!"
-        self.default_forecolor, self.default_backcolor = forecolor, backcolor
+    class AutoReset(Enum):
+        OFF = 0
+        COLOR = 1
+        CURSOR_POS = 2
+        COLOR_AND_CURSOR_POS = 3
 
-        if auto_init:
-            self.initialize()
-
-    def initialize(self):
+    @staticmethod
+    def initialize(forecolor=Colors.RESET, backcolor=Colors.RESET):
         """Initialize terminal window (reset colors, clear output, set cursor to top-left position."""
-        self.set_color(self.default_forecolor, self.default_backcolor)
-        self.clear(mode=2)
+        assert isinstance(forecolor, Colors), "Param 'forecolor' must be of Enum Colors."
+        assert isinstance(backcolor, Colors), "Param 'backcolor' must be of Enum Colors."
+
+        Terminal.set_color(forecolor, backcolor)
+        Terminal.clear(mode=2)
         Cursor.set_pos(row=1, col=1)
 
-    def clear(self, mode=2):
+    @staticmethod
+    def clear(mode=2):
         """Clear terminal screen."""
         print(f"{Ansi.CSI.value}{mode}J")
 
-    def set_color(self, forecolor=Colors.RESET, backcolor=Colors.RESET):
+    @staticmethod
+    def set_color(forecolor=Colors.RESET, backcolor=Colors.RESET):
         """Set terminal fore- and background color to specified values. Colors must be of Enum Colors.
         Example: set_color(forecolor=Colors.RED, backcolor=Colors.YELLOW)."""
-        assert isinstance(forecolor, Colors), "Param forecolor must be of Enum Colors!"
-        assert isinstance(backcolor, Colors), "Param backcolor must be of Enum Colors!"
+        assert isinstance(forecolor, Colors), "Param 'forecolor' must be of Enum Colors."
+        assert isinstance(backcolor, Colors), "Param 'backcolor' must be of Enum Colors."
         print(f"{Ansi.CSI.value}{forecolor.value};{int(backcolor.value)+10}m", end="")
 
-    def set_style(self, *styles):
+    @staticmethod
+    def set_style(*styles):
         """Set terminal font styles to specified values. Font styles must be of Enum Styles.
         Example: set_style(Styles.BOLD, Styles.UNDERLINE)."""
-        # Reset styles if no or no valid style was defined.
+        # Reset styles if no style was defined.
         if not styles:
             print(f"{Ansi.CSI.value}{Styles.RESET.value}m", end="")
             return
 
         # Loop through style enum args and apply all styles in sequence.
         for style in styles:
-            if isinstance(style, Styles):
-                print(f"{Ansi.CSI.value}{style.value}m", end="")
+            assert isinstance(style, Styles), "Param(s) 'styles' must be of Enum Styles."
+            print(f"{Ansi.CSI.value}{style.value}m", end="")
 
-    def write(self, text, end="\n", row=None, col=None, forecolor=Colors.RESET, backcolor=Colors.RESET, auto_reset=0):
+    @staticmethod
+    def write(text, end="\n", row=None, col=None, forecolor=Colors.RESET, backcolor=Colors.RESET, auto_reset=AutoReset.OFF):
         """Write text to specified terminal position using specified fore- and background color. 
-        Set auto_reset {0: keep colors/pos, 1: reset color, keep pos, 2: resets color and pos}."""
-        if auto_reset == 2:
+        Use Enum Terminal.AutoReset to reset colors and/or cursor position after writing to console."""
+        assert isinstance(auto_reset, Terminal.AutoReset), "Param 'auto_reset' must be of Enum Terminal.AutoReset."
+        if auto_reset in (Terminal.AutoReset.CURSOR_POS, Terminal.AutoReset.COLOR_AND_CURSOR_POS):
             Cursor.store_pos()
 
         # Set specified terminal cursor position.
@@ -160,13 +166,14 @@ class Terminal:
             pass
 
         # Set specified terminal colors.
-        self.set_color(forecolor, backcolor)
+        Terminal.set_color(forecolor, backcolor)
 
         # Write text to specified terminal position using defined colors.
         print(text, end=end)
 
         # Reset previous colors and cursor position depending on auto_reset value.
-        if auto_reset > 0:
-            self.set_color()
-        if auto_reset == 2:
+        if auto_reset in (Terminal.AutoReset.COLOR, Terminal.AutoReset.COLOR_AND_CURSOR_POS):
+            Terminal.set_color(forecolor=Colors.RESET, backcolor=Colors.RESET)
+
+        if auto_reset in (Terminal.AutoReset.CURSOR_POS, Terminal.AutoReset.COLOR_AND_CURSOR_POS):
             Cursor.restore_pos()

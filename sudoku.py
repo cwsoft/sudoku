@@ -16,6 +16,7 @@ import sys
 import pandas as pd
 from csutils.cterm import Colors, Cursor, Styles, Terminal
 
+__version__ = "1.0.0"
 
 class Sudoku:
     def __init__(self, args):

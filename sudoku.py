@@ -14,7 +14,8 @@ import argparse
 import sys
 
 import pandas as pd
-from csutils.cterm import Colors, Cursor, Styles, Terminal
+from csutils.cterm import Colors, Styles, Cursor, Terminal
+
 
 class Sudoku:
     def __init__(self, args):
@@ -38,7 +39,7 @@ class Sudoku:
         tpl_border = "|-+-+-+-|-+-+-+-|-+-+-+-|"
         tpl_values = "| {0} {0} {0} | {0} {0} {0} | {0} {0} {0} |"
 
-        # Print board description foloowed by the initial empty board grid.
+        # Output puzzle file name and draw the initial empty board.
         print(f"Puzzle file: '{self.puzzlefile}'")
         for row in range(0, 9):
             if row % 3 == 0:
@@ -46,31 +47,20 @@ class Sudoku:
             print(tpl_values.format(self.space))
         print(tpl_border)
 
-        # Fill input numbers from puzzle file into individual slots.
+        # Fill input numbers from puzzle file into right board slots.
         self.set_board_numbers(inputs_only=True)
 
-    def set_board_number(self, number, row, col, forecolor=None, auto_reset=True):
-        """Transfer 9x9 row/col indices into terminal coordinates matching the initial empty board."""
-        row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
-        col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}
-
-        Terminal.write(text=number, row=row_map.get(row), col=col_map.get(col), forecolor=forecolor, auto_reset=auto_reset)
-
     def set_board_numbers(self, board=None, inputs_only=True):
-        """Fill board with numbers from specified board. Input numbers [1-9] are shown green."""
-        Cursor.store_pos()
-
+        """Fill board with numbers from specified board. Input numbers are highlighted green."""
         board = self.board if board is None else board
         for row in range(9):
             for col in range(9):
                 if self.board_input[row, col] > 0:
-                    self.set_board_number(self.board_input[row, col], row, col, forecolor=Colors.GREEN)
+                    number = self.board_input[row, col]
+                    self._set_board_number(number, row, col, forecolor=Colors.GREEN)
                 else:
-                    self.set_board_number(self.space if inputs_only else board[row, col], row, col)
-
-        # Reset previous cursor position and terminal colors.
-        Cursor.restore_pos()
-        Terminal.set_style(Styles.RESET)
+                    number = self.space if inputs_only else board[row, col]
+                    self._set_board_number(number, row, col, forecolor=Colors.RESET)
 
     def solve_puzzle(self):
         """Solve Sudoku puzzle using backtracking algortithm."""
@@ -85,42 +75,52 @@ class Sudoku:
                     # Find first number which can be placed in free board slot.
                     for number in range(1, 10):
                         if self._board_position_possible(number, row, col):
-                            # Update free slot with actual number and try to solve the updated board.
-                            self.iteration_steps += 1
+                            # Update free slot with actual number.
                             self.board[row, col] = number
-
                             if self.interactive:
-                                self.set_board_number(number, row, col)
+                                self._set_board_number(number, row, col)
+
+                            # Try to solve the board with the added number.
+                            self.iteration_steps += 1
                             self.solve_puzzle()
 
-                            # Reset last assigned number if no solution was found.
+                            # Reset last assigned number as no solution was found.
                             self.board[row, col] = 0
                             if self.interactive:
-                                self.set_board_number(self.space, row, col)
+                                self._set_board_number(self.space, row, col)
                     return
 
         # Solver found a solution.
         if self.interactive:
             Cursor.enable()
         else:
+            # Show all board numbers of the actual solution.
             self.set_board_numbers(inputs_only=False)
 
         # Store actual solution in case next run won´t find a new solution.
+        # In this case we can print the last known solution in the main program.
         self.board_last_solution = self.board.copy()
         self.solutions_found += 1
 
         # Prompt user if we should check for another possible solution.
         print(f"Number of Iterations: {self.iteration_steps}" + " " * 15)
-        if input("Check for another solution ([Y]/N)? ").lower() == "n":
+        if input("Check for another solution ([y]/n)? ").lower() == "n":
             print(f"\nSolver stopped on user request. Found {self.solutions_found} solution(s).")
             sys.exit()
 
-        # Move cursor two lines up so next solution overwrites last two lines instead of adding two new lines.
-        # Adding new lines may cause a shift of the board and mess up positioning of numbers.
+        # Move cursor two lines up so next solution overwrites last two output lines instead of adding new lines.
+        # Adding new lines would shift the board in the terminal and mess up with adding numbers to right spot.
         Cursor.up(pos=2)
 
         # Reset number of iterations for the next solution.
         self.iteration_steps = 0
+
+    def _set_board_number(self, number, row, col, forecolor=None):
+        """Transfer 9x9 row/col indices into terminal coordinates matching the initial empty board."""
+        row_map = {0: 3, 1: 4, 2: 5, 3: 7, 4: 8, 5: 9, 6: 11, 7: 12, 8: 13}
+        col_map = {0: 3, 1: 5, 2: 7, 3: 11, 4: 13, 5: 15, 6: 19, 7: 21, 8: 23}
+
+        Terminal.write(number, row_map.get(row), col_map.get(col), forecolor, auto_reset=True)
 
     def _board_position_possible(self, number, row, col):
         """Check if number can be placed at given board[row][col] position."""
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         sudoku = Sudoku(args)
 
         # Prompt user to start the solver or to quit.
-        if input("\nPress [ENTER] to solve the puzzle or [Q] to quit: ").lower() == "q":
+        if input("\nPress [Enter] to solve the puzzle or (q) to quit: ").lower() == "q":
             sys.exit()
         sudoku.solve_puzzle()
 

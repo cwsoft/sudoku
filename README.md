@@ -37,5 +37,8 @@ optional arguments:
   --interactive  Outputs each single step (may slowdown hard problems).
 ```
 
+## License
+The Python Sudoku solver is published under MIT License.
+
 Have fun 
 cwsoft
